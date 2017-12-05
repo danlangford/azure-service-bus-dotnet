@@ -11,8 +11,8 @@ namespace Microsoft.Azure.ServiceBus.Amqp
     {
         readonly string entityPath;
 
-        public AmqpRequestResponseLinkCreator(string entityPath, ServiceBusConnection serviceBusConnection, Uri endpointAddress, string[] requiredClaims, ICbsTokenProvider cbsTokenProvider, AmqpLinkSettings linkSettings, string clientId)
-            : base(entityPath, serviceBusConnection, endpointAddress, requiredClaims, cbsTokenProvider, linkSettings, clientId)
+        public AmqpRequestResponseLinkCreator(string entityPath, ServiceBusConnection serviceBusConnection, Uri endpointAddress, string[] requiredClaims, AmqpLinkSettings linkSettings, string clientId)
+            : base(entityPath, serviceBusConnection, endpointAddress, requiredClaims, linkSettings, clientId)
         {
             this.entityPath = entityPath;
         }

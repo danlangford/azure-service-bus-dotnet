@@ -1,3 +1,7 @@
+fork is an attempt to alter lib to allow connections to other AMQP1.0 brokers like ActiveMQ Artemis. Strip out all CBS and expose SASL PLAIN Username and Password. Remove CBS tokens and auth expiration. Maintain all the Retry logic. its possible that this initial attempt was too aggressive but i did send a message to ActiveMQ Artemis 2.1.0
+
+----
+
 <p align="center">
   <img src="service-bus.png" alt="Microsoft Azure Relay" width="100"/>
 </p>

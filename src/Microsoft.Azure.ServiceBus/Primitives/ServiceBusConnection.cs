@@ -53,6 +53,8 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         /// </summary>
         public TransportType TransportType { get; set; }
 
+        public System.Net.NetworkCredential NetCredential { get; set; }
+
         internal FaultTolerantAmqpObject<AmqpConnection> ConnectionManager { get; set; }
 
         public Task CloseAsync()
@@ -63,9 +65,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         protected void InitializeConnection(ServiceBusConnectionStringBuilder builder)
         {
             this.Endpoint = new Uri(builder.Endpoint);
-            this.SasKeyName = builder.SasKeyName;
-            this.SasKey = builder.SasKey;
-            this.SasToken = builder.SasToken;
+            this.NetCredential = new System.Net.NetworkCredential(builder.Username, builder.Password);
             this.TransportType = builder.TransportType;
             this.ConnectionManager = new FaultTolerantAmqpObject<AmqpConnection>(this.CreateConnectionAsync, CloseConnection);
         }
@@ -84,7 +84,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             var amqpSettings = AmqpConnectionHelper.CreateAmqpSettings(
                 amqpVersion: AmqpVersion,
                 useSslStreamSecurity: true,
-                hasTokenProvider: true,
+                networkCredential: NetCredential,
                 useWebSockets: TransportType == TransportType.AmqpWebSockets);
 
             var transportSettings = CreateTransportSettings();
@@ -95,13 +95,6 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             var amqpConnectionSettings = AmqpConnectionHelper.CreateAmqpConnectionSettings(AmqpConstants.DefaultMaxFrameSize, containerId, hostName);
             var connection = new AmqpConnection(transport, amqpSettings, amqpConnectionSettings);
             await connection.OpenAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
-
-            // Always create the CBS Link + Session
-            var cbsLink = new AmqpCbsLink(connection);
-            if (connection.Extensions.Find<AmqpCbsLink>() == null)
-            {
-                connection.Extensions.Add(cbsLink);
-            }
 
             MessagingEventSource.Log.AmqpConnectionCreated(hostName, connection);
 
@@ -127,18 +120,6 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 hostName: hostName,
                 port: port,
                 useSslStreamSecurity: true);
-        }
-
-        internal TokenProvider CreateTokenProvider()
-        {
-            if (SasToken != null)
-            {
-                return TokenProvider.CreateSharedAccessSignatureTokenProvider(SasToken);
-            }
-            else
-            {
-                return TokenProvider.CreateSharedAccessSignatureTokenProvider(SasKeyName, SasKey);
-            }
         }
 
     }

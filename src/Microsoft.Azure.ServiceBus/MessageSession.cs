@@ -18,12 +18,11 @@ namespace Microsoft.Azure.ServiceBus
             MessagingEntityType? entityType,
             ReceiveMode receiveMode,
             ServiceBusConnection serviceBusConnection,
-            ICbsTokenProvider cbsTokenProvider,
             RetryPolicy retryPolicy,
             int prefetchCount = Constants.DefaultClientPrefetchCount,
             string sessionId = null,
             bool isSessionReceiver = false)
-            : base(entityPath, entityType, receiveMode, serviceBusConnection, cbsTokenProvider, retryPolicy, prefetchCount, sessionId, isSessionReceiver)
+            : base(entityPath, entityType, receiveMode, serviceBusConnection, retryPolicy, prefetchCount, sessionId, isSessionReceiver)
         {
         }
 

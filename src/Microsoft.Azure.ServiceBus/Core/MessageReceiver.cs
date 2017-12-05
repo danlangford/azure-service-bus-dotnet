@@ -89,7 +89,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             ReceiveMode receiveMode = ReceiveMode.PeekLock,
             RetryPolicy retryPolicy = null,
             int prefetchCount = Constants.DefaultClientPrefetchCount)
-            : this(entityPath, null, receiveMode, new ServiceBusNamespaceConnection(connectionString), null, retryPolicy, prefetchCount)
+            : this(entityPath, null, receiveMode, new ServiceBusNamespaceConnection(connectionString), retryPolicy, prefetchCount)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
             {
@@ -101,8 +101,6 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
 
             this.ownsConnection = true;
-            var tokenProvider = this.ServiceBusConnection.CreateTokenProvider();
-            this.CbsTokenProvider = new TokenProviderAdapter(tokenProvider, this.ServiceBusConnection.OperationTimeout);
         }
 
         internal MessageReceiver(
@@ -110,7 +108,6 @@ namespace Microsoft.Azure.ServiceBus.Core
             MessagingEntityType? entityType,
             ReceiveMode receiveMode,
             ServiceBusConnection serviceBusConnection,
-            ICbsTokenProvider cbsTokenProvider,
             RetryPolicy retryPolicy,
             int prefetchCount = Constants.DefaultClientPrefetchCount,
             string sessionId = null,
@@ -123,7 +120,6 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.ReceiveMode = receiveMode;
             this.Path = entityPath;
             this.EntityType = entityType;
-            this.CbsTokenProvider = cbsTokenProvider;
             this.SessionIdInternal = sessionId;
             this.isSessionReceiver = isSessionReceiver;
             this.ReceiveLinkManager = new FaultTolerantAmqpObject<ReceivingAmqpLink>(this.CreateLinkAsync, CloseSession);
@@ -131,7 +127,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.requestResponseLockedMessages = new ConcurrentExpiringSet<Guid>();
             this.PrefetchCount = prefetchCount;
             this.messageReceivePumpSyncLock = new object();
-            this.clientLinkManager = new ActiveClientLinkManager(this.ClientId, this.CbsTokenProvider);
+            this.clientLinkManager = new ActiveClientLinkManager(this.ClientId);
 
             MessagingEventSource.Log.MessageReceiverCreateStop(serviceBusConnection.Endpoint.Authority, entityPath, this.ClientId);
         }
@@ -227,8 +223,6 @@ namespace Microsoft.Azure.ServiceBus.Core
         Exception LinkException { get; set; }
 
         ServiceBusConnection ServiceBusConnection { get; }
-
-        ICbsTokenProvider CbsTokenProvider { get; }
 
         FaultTolerantAmqpObject<ReceivingAmqpLink> ReceiveLinkManager { get; }
 
@@ -1302,16 +1296,14 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             var endpointUri = new Uri(this.ServiceBusConnection.Endpoint, this.Path);
             var claims = new[] { ClaimConstants.Listen };
-            var amqpSendReceiveLinkCreator = new AmqpSendReceiveLinkCreator(this.Path, this.ServiceBusConnection, endpointUri, claims, this.CbsTokenProvider, amqpLinkSettings, this.ClientId);
-            Tuple<AmqpObject, DateTime> linkDetails = await amqpSendReceiveLinkCreator.CreateAndOpenAmqpLinkAsync().ConfigureAwait(false);
+            var amqpSendReceiveLinkCreator = new AmqpSendReceiveLinkCreator(this.Path, this.ServiceBusConnection, endpointUri, claims, amqpLinkSettings, this.ClientId);
+            ReceivingAmqpLink receivingAmqpLink = (ReceivingAmqpLink) await amqpSendReceiveLinkCreator.CreateAndOpenAmqpLinkAsync().ConfigureAwait(false);
 
-            var receivingAmqpLink = (ReceivingAmqpLink) linkDetails.Item1;
             var activeSendReceiveClientLink = new ActiveSendReceiveClientLink(
                 receivingAmqpLink,
                 endpointUri,
                 endpointUri.AbsoluteUri,
-                claims,
-                linkDetails.Item2);
+                claims);
 
             this.clientLinkManager.SetActiveSendReceiveLink(activeSendReceiveClientLink);
 
@@ -1331,16 +1323,14 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             var endpointUri = new Uri(this.ServiceBusConnection.Endpoint, entityPath);
             string[] claims = { ClaimConstants.Manage, ClaimConstants.Listen };
-            var amqpRequestResponseLinkCreator = new AmqpRequestResponseLinkCreator(entityPath, this.ServiceBusConnection, endpointUri, claims, this.CbsTokenProvider, amqpLinkSettings, this.ClientId);
-            var linkDetails = await amqpRequestResponseLinkCreator.CreateAndOpenAmqpLinkAsync().ConfigureAwait(false);
+            var amqpRequestResponseLinkCreator = new AmqpRequestResponseLinkCreator(entityPath, this.ServiceBusConnection, endpointUri, claims, amqpLinkSettings, this.ClientId);
+            RequestResponseAmqpLink requestResponseAmqpLink = (RequestResponseAmqpLink) await amqpRequestResponseLinkCreator.CreateAndOpenAmqpLinkAsync().ConfigureAwait(false);
 
-            var requestResponseAmqpLink = (RequestResponseAmqpLink)linkDetails.Item1;
             var activeRequestResponseClientLink = new ActiveRequestResponseLink(
                 requestResponseAmqpLink,
                 endpointUri,
                 endpointUri.AbsoluteUri,
-                claims,
-                linkDetails.Item2);
+                claims);
             this.clientLinkManager.SetActiveRequestResponseLink(activeRequestResponseClientLink);
 
             MessagingEventSource.Log.AmqpReceiveLinkCreateStop(this.ClientId);

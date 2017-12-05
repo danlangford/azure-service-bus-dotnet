@@ -106,8 +106,6 @@ namespace Microsoft.Azure.ServiceBus
             this.SubscriptionName = subscriptionName;
             this.Path = EntityNameHelper.FormatSubscriptionPath(this.TopicPath, this.SubscriptionName);
             this.ReceiveMode = receiveMode;
-            this.TokenProvider = this.ServiceBusConnection.CreateTokenProvider();
-            this.CbsTokenProvider = new TokenProviderAdapter(this.TokenProvider, serviceBusConnection.OperationTimeout);
 
             MessagingEventSource.Log.SubscriptionClientCreateStop(serviceBusConnection.Endpoint.Authority, topicPath, subscriptionName, this.ClientId);
         }
@@ -194,7 +192,6 @@ namespace Microsoft.Azure.ServiceBus
                             this.Path,
                             this.ServiceBusConnection,
                             this.RetryPolicy,
-                            this.CbsTokenProvider,
                             this.PrefetchCount,
                             this.ReceiveMode);
                     }
@@ -221,7 +218,6 @@ namespace Microsoft.Azure.ServiceBus
                                 this.ReceiveMode,
                                 this.PrefetchCount,
                                 this.ServiceBusConnection,
-                                this.CbsTokenProvider,
                                 this.RetryPolicy,
                                 this.RegisteredPlugins);
                         }
@@ -256,10 +252,6 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         internal ServiceBusNamespaceConnection ServiceBusConnection { get; }
-
-        ICbsTokenProvider CbsTokenProvider { get; }
-
-        TokenProvider TokenProvider { get; }
 
         /// <summary>
         /// Completes a <see cref="Message"/> using its lock token. This will delete the message from the subscription.

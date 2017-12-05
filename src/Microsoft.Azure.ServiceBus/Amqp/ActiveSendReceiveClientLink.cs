@@ -8,8 +8,8 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
     sealed class ActiveSendReceiveClientLink : ActiveClientLinkObject
     {
-        public ActiveSendReceiveClientLink(AmqpLink link, Uri endpointUri, string audience, string[] requiredClaims, DateTime authorizationValidUntilUtc)
-            : base(link, endpointUri, audience, requiredClaims, authorizationValidUntilUtc)
+        public ActiveSendReceiveClientLink(AmqpLink link, Uri endpointUri, string audience, string[] requiredClaims)
+            : base(link, endpointUri, audience, requiredClaims)
         {
             this.Link = link;
         }

@@ -86,7 +86,6 @@ namespace Microsoft.Azure.ServiceBus
                   receiveMode,
                   prefetchCount,
                   new ServiceBusNamespaceConnection(connectionString),
-                  null,
                   retryPolicy,
                   null)
         {
@@ -100,8 +99,6 @@ namespace Microsoft.Azure.ServiceBus
             }
 
             this.ownsConnection = true;
-            var tokenProvider = this.ServiceBusConnection.CreateTokenProvider();
-            this.CbsTokenProvider = new TokenProviderAdapter(tokenProvider, this.ServiceBusConnection.OperationTimeout);
         }
 
         internal SessionClient(
@@ -111,7 +108,6 @@ namespace Microsoft.Azure.ServiceBus
             ReceiveMode receiveMode,
             int prefetchCount,
             ServiceBusConnection serviceBusConnection,
-            ICbsTokenProvider cbsTokenProvider,
             RetryPolicy retryPolicy,
             IList<ServiceBusPlugin> registeredPlugins)
             : base(clientTypeName, entityPath, retryPolicy ?? RetryPolicy.Default)
@@ -122,7 +118,6 @@ namespace Microsoft.Azure.ServiceBus
             this.EntityType = entityType;
             this.ReceiveMode = receiveMode;
             this.PrefetchCount = prefetchCount;
-            this.CbsTokenProvider = cbsTokenProvider;
 
             // Register plugins on the message session.
             if (registeredPlugins != null)
@@ -155,8 +150,6 @@ namespace Microsoft.Azure.ServiceBus
         internal int PrefetchCount { get; set; }
 
         ServiceBusConnection ServiceBusConnection { get; }
-
-        ICbsTokenProvider CbsTokenProvider { get; }
 
         /// <summary>
         /// Gets a list of currently registered plugins.
@@ -218,7 +211,6 @@ namespace Microsoft.Azure.ServiceBus
                 this.EntityType,
                 this.ReceiveMode,
                 this.ServiceBusConnection,
-                this.CbsTokenProvider,
                 this.RetryPolicy,
                 this.PrefetchCount,
                 sessionId,

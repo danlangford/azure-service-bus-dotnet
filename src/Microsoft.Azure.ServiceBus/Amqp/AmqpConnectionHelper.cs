@@ -11,17 +11,13 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
     internal class AmqpConnectionHelper
     {
-        const string CbsSaslMechanismName = "MSSBCBS";
-
         public static AmqpSettings CreateAmqpSettings(
             Version amqpVersion,
             bool useSslStreamSecurity,
-            bool hasTokenProvider,
             string sslHostName = null,
             bool useWebSockets = false,
             bool sslStreamUpgrade = false,
-            System.Net.NetworkCredential networkCredential = null,
-            bool forceTokenProvider = true)
+            System.Net.NetworkCredential networkCredential = null)
         {
             var amqpSettings = new AmqpSettings();
             if (useSslStreamSecurity && !useWebSockets && sslStreamUpgrade)
@@ -36,17 +32,13 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 amqpSettings.TransportProviders.Add(tlsProvider);
             }
 
-            if (hasTokenProvider || networkCredential != null)
+            if (networkCredential != null)
             {
                 var saslTransportProvider = new SaslTransportProvider();
                 saslTransportProvider.Versions.Add(new AmqpVersion(amqpVersion));
                 amqpSettings.TransportProviders.Add(saslTransportProvider);
 
-                if (forceTokenProvider)
-                {
-                    saslTransportProvider.AddHandler(new SaslAnonymousHandler(CbsSaslMechanismName));
-                }
-                else if (networkCredential != null)
+                if (networkCredential != null)
                 {
                     var plainHandler = new SaslPlainHandler
                     {
@@ -54,11 +46,6 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                         Password = networkCredential.Password
                     };
                     saslTransportProvider.AddHandler(plainHandler);
-                }
-                else
-                {
-                    // old client behavior: keep it for validation only
-                    saslTransportProvider.AddHandler(new SaslExternalHandler());
                 }
             }
 

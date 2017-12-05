@@ -77,8 +77,6 @@ namespace Microsoft.Azure.ServiceBus
             this.OperationTimeout = this.ServiceBusConnection.OperationTimeout;
             this.syncLock = new object();
             this.TopicName = entityPath;
-            this.TokenProvider = this.ServiceBusConnection.CreateTokenProvider();
-            this.CbsTokenProvider = new TokenProviderAdapter(this.TokenProvider, serviceBusConnection.OperationTimeout);
 
             MessagingEventSource.Log.TopicClientCreateStop(serviceBusConnection?.Endpoint.Authority, entityPath, this.ClientId);
         }
@@ -116,7 +114,6 @@ namespace Microsoft.Azure.ServiceBus
                                 this.TopicName,
                                 MessagingEntityType.Topic,
                                 this.ServiceBusConnection,
-                                this.CbsTokenProvider,
                                 this.RetryPolicy);
                         }
                     }
@@ -127,10 +124,6 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         internal ServiceBusNamespaceConnection ServiceBusConnection { get; }
-
-        ICbsTokenProvider CbsTokenProvider { get; }
-
-        TokenProvider TokenProvider { get; }
 
         /// <summary>
         /// Sends a message to Service Bus.

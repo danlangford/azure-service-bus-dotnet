@@ -107,8 +107,6 @@ namespace Microsoft.Azure.ServiceBus
             this.syncLock = new object();
             this.QueueName = entityPath;
             this.ReceiveMode = receiveMode;
-            this.TokenProvider = this.ServiceBusConnection.CreateTokenProvider();
-            this.CbsTokenProvider = new TokenProviderAdapter(this.TokenProvider, serviceBusConnection.OperationTimeout);
 
             MessagingEventSource.Log.QueueClientCreateStop(serviceBusConnection.Endpoint.Authority, entityPath, this.ClientId);
         }
@@ -196,7 +194,6 @@ namespace Microsoft.Azure.ServiceBus
                                 this.QueueName,
                                 MessagingEntityType.Queue,
                                 this.ServiceBusConnection,
-                                this.CbsTokenProvider,
                                 this.RetryPolicy);
                         }
                     }
@@ -221,7 +218,6 @@ namespace Microsoft.Azure.ServiceBus
                                 MessagingEntityType.Queue,
                                 this.ReceiveMode,
                                 this.ServiceBusConnection,
-                                this.CbsTokenProvider,
                                 this.RetryPolicy,
                                 this.PrefetchCount);
                         }
@@ -249,7 +245,6 @@ namespace Microsoft.Azure.ServiceBus
                                 this.ReceiveMode,
                                 this.PrefetchCount,
                                 this.ServiceBusConnection,
-                                this.CbsTokenProvider,
                                 this.RetryPolicy,
                                 this.RegisteredPlugins);
 
@@ -286,10 +281,6 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         internal ServiceBusConnection ServiceBusConnection { get; }
-
-        ICbsTokenProvider CbsTokenProvider { get; }
-
-        TokenProvider TokenProvider { get; }
 
         /// <summary>
         /// Sends a message to Service Bus.

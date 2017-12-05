@@ -33,7 +33,6 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             string path,
             ServiceBusConnection servicebusConnection,
             RetryPolicy retryPolicy,
-            ICbsTokenProvider cbsTokenProvider,
             int prefetchCount = 0,
             ReceiveMode mode = ReceiveMode.ReceiveAndDelete)
         {
@@ -41,7 +40,6 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             this.Path = path;
             this.ServiceBusConnection = servicebusConnection;
             this.RetryPolicy = retryPolicy;
-            this.CbsTokenProvider = cbsTokenProvider;
             this.PrefetchCount = prefetchCount;
             this.ReceiveMode = mode;
         }
@@ -61,7 +59,6 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                                 MessagingEntityType.Subscriber,
                                 this.ReceiveMode,
                                 this.ServiceBusConnection,
-                                this.CbsTokenProvider,
                                 this.RetryPolicy,
                                 this.PrefetchCount);
                         }
@@ -96,8 +93,6 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         ServiceBusConnection ServiceBusConnection { get; }
 
         RetryPolicy RetryPolicy { get; }
-
-        ICbsTokenProvider CbsTokenProvider { get; }
 
         ReceiveMode ReceiveMode { get; }
 
